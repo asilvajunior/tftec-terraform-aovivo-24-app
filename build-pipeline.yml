@@ -1,0 +1,29 @@
+trigger:
+- main  # ou a branch que você prefere
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: MyAppVariables  # Referência ao grupo de variáveis
+
+jobs:
+- job: Build
+  displayName: 'Build Docker Image'
+  steps:
+  - checkout: self  # Faz o checkout do repositório
+
+  - script: |
+      echo "Iniciando o processo de build..."
+      if [ -f version.txt ]; then
+        VERSION=$(cat version.txt)
+        echo "Tagging the image with version: $VERSION"
+        docker build -t $(acrLoginServer)/$(imageName):$VERSION -f $(dockerfilePath) $(buildContext)
+        echo "Imagem construída com sucesso. Preparando para enviar ao ACR..."
+        docker push $(acrLoginServer)/$(imageName):$VERSION
+        echo "Imagem enviada com sucesso!"
+      else
+        echo "version.txt não encontrado!"
+        exit 1
+      fi
+    displayName: 'Build and Push Docker Image'
