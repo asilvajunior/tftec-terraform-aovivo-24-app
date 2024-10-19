@@ -1,19 +1,21 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 80
-
+# Etapa de construção
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY ["app/MeuApp.csproj", "app/"]
-RUN dotnet restore "app/MeuApp.csproj"
-COPY . .
-WORKDIR "/src/app"
-RUN dotnet build "MeuApp.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "MeuApp.csproj" -c Release -o /app/publish
-
-FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Copiar os arquivos de projeto e restaurar dependências
+COPY ./app/*.csproj ./
+RUN dotnet restore
+
+# Copiar o restante dos arquivos da aplicação
+COPY ./app/. ./
+
+# Compilar a aplicação
+RUN dotnet publish -c Release -o out
+
+# Etapa de runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/out ./
+
+# Comando para executar a aplicação
 ENTRYPOINT ["dotnet", "MeuApp.dll"]

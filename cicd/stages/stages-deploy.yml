@@ -1,0 +1,63 @@
+trigger:
+  paths:
+    include:
+      - cicd/stages/stages-deploy.yml  # Caminho do arquivo específico
+
+variables:
+  # Variáveis que o analista pode alterar
+  helmVersion: 'latest'  # Versão do Helm
+  acrName: 'acrtftectesteado123'  # Nome do Azure Container Registry
+  azureSubscription: 'tftec-devops'  # Nome da assinatura do Azure
+  azureResourceGroup: 'rg-tftec-kubernetes'  # Nome do grupo de recursos do Azure
+  kubernetesCluster: 'aks-tftec-brazilsouth-001'  # Nome do cluster Kubernetes
+  imageRepository: 'acrtftectesteado123.azurecr.io/image/ao-vivo-sp-24/tftec-app'  # Repositório da imagem
+  imageTag: 'latest'  # Tag da imagem
+  namespace: 'default'  # Namespace do Kubernetes
+  chartVersion: '537'  # Versão do Helm Chart
+
+jobs:
+  - job: HelmDeploy
+    displayName: 'Job: Deploy Helm Chart'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      # Instalar o Helm
+      - task: HelmInstaller@1
+        inputs:
+          helmVersionToInstall: $(helmVersion)
+
+      # Login no ACR
+      - task: AzureCLI@2
+        displayName: 'Login no ACR'
+        inputs:
+          azureSubscription: $(azureSubscription)
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            echo "Realizando login no ACR..."
+            az acr login --name $(acrName)
+
+      # Fazer o pull do Helm Chart diretamente do ACR
+      - script: |
+          echo "Baixando o Helm Chart diretamente do ACR..."
+          export HELM_EXPERIMENTAL_OCI=1
+          helm pull oci://$(acrName).azurecr.io/helm-chart/ao-vivo-sp-24/tftec-app --version $(chartVersion) --untar
+        displayName: 'Pull Helm Chart from ACR'
+
+      # Fazer o deploy do Helm Chart extraído
+      - task: HelmDeploy@0
+        displayName: 'Deploy Helm Chart'
+        inputs:
+          azureSubscription: $(azureSubscription)
+          kubernetesServiceEndpoint: tftec-kubernetes
+          azureResourceGroup: $(azureResourceGroup)
+          kubernetesCluster: $(kubernetesCluster)
+          command: 'upgrade'
+          chartType: 'FilePath'
+          chartPath: './tftec-app'  # Diretório extraído do pull
+          releaseName: tftec-app-$(Build.BuildId)
+          namespace: $(namespace)
+          overrideValues: |
+            image.repository=$(imageRepository)
+            image.tag=$(imageTag)
+            replicaCount=3

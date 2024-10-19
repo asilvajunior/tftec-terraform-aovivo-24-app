@@ -1,0 +1,13 @@
+# Default values for tftec-app.
+# This is a YAML-formatted file.
+# Declare variables to be used in the templates.
+
+replicaCount: 1  # Número padrão de réplicas
+
+image:
+  repository: acrtftecbrazilsouth62021.azurecr.io/image/ao-vivo-sp-24/tftec-app  # Repositório da imagem que deve ser modificado conforme necessário.
+  tag: latest  # Tag padrão da imagem
+
+service:
+  port: 80  # Porta exposta pelo serviço
+  targetPort: 8080  # Porta do contêiner onde a aplicação escuta

@@ -1,0 +1,78 @@
+trigger:
+  branches:
+    include:
+      - main  # Aciona apenas no branch main
+  paths:
+    include:
+      - app/       # Aciona se houver mudanças no diretório da aplicação
+      - charts/    # Aciona se houver mudanças nos Helm Charts
+      - Dockerfile  # Aciona se houver mudanças no Dockerfile
+    exclude:
+      - docs/      # Ignora mudanças nesses diretórios
+      - documents/
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: BUILD
+    displayName: Build Docker Image and Helm Chart
+    jobs:
+    - job: BuildAndPublishJob
+      variables:
+        - group: tftec-app-vars  # Grupo de variáveis compartilhadas
+      steps:
+        # Checkout the code with a full clone
+        - checkout: self
+          clean: true
+          fetchDepth: 0  
+
+        # Setup .NET SDK
+        - task: UseDotNet@2
+          displayName: 'Setup .NET SDK'
+          inputs:
+            packageType: 'sdk'
+            version: '7.x'
+
+        # Install Helm
+        - task: HelmInstaller@1
+          displayName: 'Install Helm'
+          inputs:
+            helmVersionToInstall: 'latest'
+
+        # Build and push Docker image
+        - task: Docker@2
+          displayName: 'Build and push Docker image'
+          inputs:
+            command: buildAndPush
+            repository: $(imageRepository)
+            dockerfile: $(dockerfilePath)
+            containerRegistry: tftec-teste-acr  # Nome do ACR a ser modificado conforme necessário
+            tags: |
+              $(tag)
+              latest
+            buildContext: '$(Build.SourcesDirectory)'  # Contexto de build do Docker
+
+        # Build Helm chart and push to ACR
+        - task: AzureCLI@2
+          displayName: 'Package and Push Helm Chart to ACR'
+          inputs:
+            azureSubscription: tftec-devops  # Subscrição a ser ajustada
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            addSpnToEnvironment: true
+            inlineScript: |
+              # Login no registry
+              BUILD_ID=$(Build.BuildId)
+              echo "Building Helm Chart with version: $BUILD_ID"
+              
+              # Package Helm Chart Version
+              helm package chart --app-version $BUILD_ID --version $BUILD_ID
+
+              # Login no ACR
+              az acr login --name $(containerRegistry)
+
+              # Push Helm Chart to ACR
+              helm push tftec-app-$BUILD_ID.tgz oci://$(containerRegistry)/$(HelmRepoName)
+          env:
+            HELM_EXPERIMENTAL_OCI: 1
