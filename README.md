@@ -58,7 +58,7 @@ Service connection name: `tftec-registry`
 
 Check Grant access permission to all pipelines and save.
 
-### 6. Faça os ajustes necessários nas pipelines de build e deploy
+### 6. Make the necessary adjustments to the build and deploy pipelines
 
 **Build pipeline:**
 
