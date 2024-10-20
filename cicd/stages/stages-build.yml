@@ -6,10 +6,10 @@ trigger:
     include:
       - app/       # Aciona se houver mudanças no diretório da aplicação
       - charts/    # Aciona se houver mudanças nos Helm Charts
-      - Dockerfile  # Aciona se houver mudanças no Dockerfile
+      - docker/Dockerfile  # Aciona se houver mudanças no Dockerfile
     exclude:
       - docs/      # Ignora mudanças nesses diretórios
-      - documents/
+      - documents/ # Ignora mudanças nesses diretórios
 
 pool:
   vmImage: ubuntu-latest
@@ -32,7 +32,7 @@ stages:
           displayName: 'Setup .NET SDK'
           inputs:
             packageType: 'sdk'
-            version: '7.x'
+            version: '8.x'  # Atualizado para a versão 8.x conforme seu Dockerfile
 
         # Install Helm
         - task: HelmInstaller@1
@@ -40,14 +40,26 @@ stages:
           inputs:
             helmVersionToInstall: 'latest'
 
+        # List files in build context for debugging
+        - script: |
+            echo "Arquivos no contexto de build:"
+            ls -la $(Build.SourcesDirectory)
+          displayName: 'Listar arquivos no contexto de build'
+
+        # Limpar imagens não utilizadas
+        - script: |
+            echo "Limpando imagens Docker não utilizadas..."
+            docker image prune -af
+          displayName: 'Limpar imagens não utilizadas'
+
         # Build and push Docker image
         - task: Docker@2
           displayName: 'Build and push Docker image'
           inputs:
             command: buildAndPush
             repository: $(imageRepository)
-            dockerfile: $(dockerfilePath)
-            containerRegistry: tftec-teste-acr  # Nome do ACR a ser modificado conforme necessário
+            dockerfile: $(dockerfilePath)  # Caminho explícito para o Dockerfile
+            containerRegistry: tftec-registry  # Nome do service connection do Azure Container Registry.
             tags: |
               $(tag)
               latest
@@ -57,7 +69,7 @@ stages:
         - task: AzureCLI@2
           displayName: 'Package and Push Helm Chart to ACR'
           inputs:
-            azureSubscription: tftec-devops  # Subscrição a ser ajustada
+            azureSubscription: tftec-devops  # nome do service connection do Azure.
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             addSpnToEnvironment: true

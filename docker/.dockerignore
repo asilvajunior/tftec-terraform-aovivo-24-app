@@ -1,0 +1,15 @@
+# Ignorar arquivos de compilação
+bin/
+obj/
+
+# Ignorar arquivos temporários
+*.tmp
+*.log
+
+# Ignorar arquivos de configuração
+appsettings.json
+appsettings.Development.json
+
+# Ignorar pastas específicas
+.git/
+.DS_Store

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: tftec-app
-description: A Helm chart for deploying tftec-app
-version: 0.1.0
-appVersion: "1.0.0"
+name: tftec-app # Nome do chart
+description: A Helm chart for deploying tftec-app # Descrição do chart
+version: 0.1.0 # Versão do chart
+appVersion: "1.0.0"  # Versão da aplicação

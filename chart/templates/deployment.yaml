@@ -1,19 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-deployment
+  name: "{{ .Release.Name }}"  # Usando variável para o nome
 spec:
-  replicas: {{ .Values.replicaCount }} 
+  replicas: {{ .Values.replicaCount }}  # Referenciando o valor do replicaCount
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: "{{ .Release.Name }}"  # Usando variável para o nome
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: "{{ .Release.Name }}"  # Usando variável para o nome
     spec:
       containers:
-        - name: {{ .Release.Name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }} 
+        - name: "{{ .Release.Name }}"  # Usando variável para o nome
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}  # Usando variáveis para o repositório e a tag
           ports:
-            - containerPort: {{ .Values.service.targetPort }} 
+            - containerPort: 8080
+          volumeMounts:
+            - name: appsettings-volume
+              mountPath: /app/appsettings.json  # Ajuste para o caminho desejado
+              subPath: appsettings.json
+      volumes:
+        - name: appsettings-volume
+          secret:
+            secretName: "{{ .Release.Name }}-appsettings"  # Usando variável para o nome
