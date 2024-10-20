@@ -117,7 +117,9 @@ kubectl get secrets
 kubectl get pods 
 ```
 
->NOTE: If you do not have kubectl installed on your machine, follow these steps:
+---
+
+>NOTE: If you do not have Azure CLO and kubectl installed on your machine, follow these steps:
 
 **Linux Way**
 
