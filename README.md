@@ -205,6 +205,7 @@ Verify the installation:
 ```bash
 kubectl version --client
 ````
+
 ---
 
 - **Important Note:** Please access this repository and FORK it and use them during the course.
