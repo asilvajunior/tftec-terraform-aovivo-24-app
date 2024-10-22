@@ -5,12 +5,12 @@
 replicaCount: 1  # Número padrão de réplicas
 
 image:
-  repository: acrtftecbrazilsouth62021.azurecr.io/image/ao-vivo-sp-24/tftec-app  # Repositório da imagem que deve ser modificado conforme necessário.
+  repository: acrtftecuksouth8503.azurecr.io/image/ao-vivo-sp-24/tftec-app  # Repositório da imagem que deve ser modificado conforme necessário.
   tag: latest  # Tag padrão da imagem
 
 service:
   type: LoadBalancer  # Ou NodePort, dependendo de como você quer acessar
-  port: 5090          # Porta que você deseja expor
+  port: 8080          # Porta que você deseja expor
   targetPort: 8080    # Porta onde sua aplicação está rodando dentro do contêiner
 
 environment: aovivo  # Adicione a variável environment
